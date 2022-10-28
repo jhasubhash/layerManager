@@ -40,46 +40,86 @@ const LineWithArrow = fabric.util.createClass(fabric.Line, {
   },
 });
 
-export const addLayerNode = (canvas, pos) => {
+export const addLayerNode = (canvas, pos, name) => {
+  var shadow = new fabric.Shadow({
+    color: "rgba(255,69,0, 0.7)",
+    blur: 5,
+  });
   var rect = new fabric.Rect({
-    top : pos.y,
-    left : pos.x,
     width: 100,
     height: 30,
     rx: 10,
     ry: 10,
-    fill : 'red'
+    fill : 'red',
+    originX: 'center',
+    originY: 'center',
+    shadow: shadow
   });
-  rect.set({
+
+  var t = new fabric.Text(name, {
+    fontFamily: 'Calibri',
+    fontSize: 18,
+    fill:'white',
+    textAlign: 'center',
+    originX: 'center',
+    originY: 'center',
+});
+
+  var g = new fabric.Group([rect, t],{
+    top : pos.y,
+    left : pos.x,
+  });
+
+  g.nodeType = NodeType.NormalLayer;
+  g.id = uuidv4();
+  g.hasControls = true;
+  g.set({
       cornerSize: 6,
       cornerStyle: 'circle',
       transparentCorners: false
     });
-  //circle.hasControls = false;
-  rect.nodeType = NodeType.NormalLayer;
-  rect.id = uuidv4();
-  canvas.add(rect);
+  canvas.add(g);
 }
 
-export const addAdjustmentNode = (canvas, pos) => {
+export const addAdjustmentNode = (canvas, pos, name) => {
+  var shadow = new fabric.Shadow({
+    color: "rgba(0,0,0, 0.7)",
+    blur: 5,
+  });
   var rect = new fabric.Rect({
-    top : pos.y,
-    left : pos.x,
     width: 100,
     height: 30,
     rx: 10,
     ry: 10,
-    fill : 'grey'
+    fill : 'grey',
+    originX: 'center',
+    originY: 'center',
+    shadow: shadow
   });
-  rect.set({
+  //circle.hasControls = false;
+  var t = new fabric.Text(name, {
+      fontFamily: 'Calibri',
+      fontSize: 18,
+      fill:'white',
+      textAlign: 'center',
+      originX: 'center',
+      originY: 'center',
+  });
+
+  var g = new fabric.Group([rect, t],{
+    top : pos.y,
+    left : pos.x,
+  });
+
+  g.nodeType = NodeType.AdjustmentLayer;
+  g.id = uuidv4();
+  g.hasControls = true;
+  g.set({
       cornerSize: 6,
       cornerStyle: 'circle',
       transparentCorners: false
     });
-  //circle.hasControls = false;
-  rect.nodeType = NodeType.AdjustmentLayer;
-  rect.id = uuidv4();
-  canvas.add(rect);
+  canvas.add(g);
 }
 
 export const connectLayerNode = (canvas, obj1, obj2) => {
@@ -114,7 +154,7 @@ export const connectLayerNode = (canvas, obj1, obj2) => {
 
 export const disconnectLayerNode = (canvas) => {
   let line = canvas.getActiveObject();
-  if(!line.objects) return;
+  if(!line || !line.objects) return;
   line.objects[0].startLines = line.objects[0].startLines.filter(x => {
       return x.Id != line.id;
   })

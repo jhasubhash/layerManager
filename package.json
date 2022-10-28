@@ -1,5 +1,5 @@
 {
-  "name": "webapp-plugin",
+  "name": "layer-manager",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -11,7 +11,9 @@
     "fabric": "^5.2.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-hotkeys-hook": "^3.4.7",
     "react-scripts": "5.0.1",
+    "serve": "^14.0.1",
     "uuidv4": "^5.0.1",
     "web-vitals": "^2.1.4",
     "workbox-background-sync": "^6.5.4",

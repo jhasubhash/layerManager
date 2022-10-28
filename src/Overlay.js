@@ -5,8 +5,9 @@ import paper from './paper.jpg';
 import graphy from './graphy.png';
 import {makeLine, addLayerNode, connectLayerNode, disconnectLayerNode, NodeType, addAdjustmentNode} from './Operations';
 import {useWindowDimensions} from "./Utils"
-import {ListBox, Item, Section} from '@adobe/react-spectrum'
+import {ListBox, Item, Section,Text} from '@adobe/react-spectrum'
 import { defaultTheme, Provider} from '@adobe/react-spectrum';
+import { useHotkeys } from 'react-hotkeys-hook'
 
 
 let canvasImage = "https://www.transparenttextures.com/patterns/graphy.png";
@@ -14,14 +15,58 @@ let canvas = undefined;
 let selectedObj = undefined;
 let  museIsDown = false;
 
+const LAYER_AREA_TOP = 200
+const LAYER_AREA_LEFT = 1000
+const LAYER_AREA_BOTTOM = 1000
+const LAYER_AREA_RIGHT = 1600
+
+const PADDING = 100;
+const CONTROL_LAYER_MARGIN = 400;
+const CONTROL_LAYER_WIDTH = 300;
+
 fabric.Group.prototype.hasControls = false
 fabric.Line.prototype.selectable = true;
+
+let layers;
 
 export const Overlay = (props) => {
 
     const { height, width } = useWindowDimensions();
+    useHotkeys('cmd+f', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        fetchLayers()
+    })
+    useHotkeys('cmd+l',  (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        connect()
+    })
+    useHotkeys('cmd+d, del',  (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        disconnect()
+    })
+
+    useHotkeys('cmd+b',  (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        createBlurNode()
+    })
+    useHotkeys('cmd+o',  (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        createOpacityNode()
+    })
+    useHotkeys('cmd+a',  (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        arrangeLayers()
+    })
+
 
     useEffect(()=>{
+        //TODO: make a connection to websocket server
         if(!canvas){
             canvas = new fabric.Canvas('canvas', 
             {
@@ -47,15 +92,28 @@ export const Overlay = (props) => {
                 "object:moving" : handleObjectMove,
             });
 
-            canvas.add(new fabric.IText('Tap and Type', { 
+            canvas.add(new fabric.IText('Layer Manager', { 
                 fontFamily: 'arial black',
-                left: 100, 
-                top: 100 ,
+                left: 700, 
+                top: 20 ,
               }));
-            console.log("canvas created")
 
-            addLayerNode(canvas, {x:400, y:400});
-            addLayerNode(canvas, {x:500, y:500});
+            //add layer area
+            var layerArea = new fabric.Rect({
+                width: LAYER_AREA_RIGHT- LAYER_AREA_LEFT,
+                height: LAYER_AREA_BOTTOM - LAYER_AREA_TOP,
+                rx: 10,
+                ry: 10,
+                stroke: 'black',
+                strokeWidth: 5,
+                fill: 'rgba(0,0,0,0)',
+                left: LAYER_AREA_LEFT, 
+                top: LAYER_AREA_TOP ,
+                selectable: false,
+              });
+            canvas.add(layerArea)
+            canvas.sendToBack(layerArea)
+            console.log("canvas created")
         }
         
     },[])
@@ -73,14 +131,10 @@ export const Overlay = (props) => {
                 layerObjs.forEach(obj2 => {
                     // two objects are selected. Connect them
                     let line = connectLayerNode(canvas, obj1, obj2);
-                    
+                    // TODO: Make a call to websocker server to apply the edits to given layer
                 });
             });
         }
-        //line.set('active', true);
-        //let slected = canvas.getActiveObject();
-        //slected.addWithUpdate(line);
-        //canvas.setActiveObject(slected);
     }
 
     const disconnect = () => {
@@ -104,7 +158,7 @@ export const Overlay = (props) => {
     
     const handleObjectMove = (e) => {
         var p = e.target;
-        if(p._objects){
+        if(p._objects && p.nodeType == undefined){
             p._objects.forEach(obj => {
                 if(obj.nodeType != NodeType.Link){
                     let left = obj.left + obj.group.left + obj.group.width / 2
@@ -188,14 +242,60 @@ export const Overlay = (props) => {
     }
 
     const createBlurNode = () => {
-        addAdjustmentNode(canvas,{x: 100,y:500})
+        let x = randomIntFromInterval(LAYER_AREA_LEFT - CONTROL_LAYER_MARGIN - CONTROL_LAYER_WIDTH, LAYER_AREA_LEFT - CONTROL_LAYER_MARGIN)
+        let y = randomIntFromInterval(LAYER_AREA_TOP + PADDING, LAYER_AREA_BOTTOM - PADDING)
+        addAdjustmentNode(canvas,{x: x,y:y}, "Blur")
+    }
+
+    const createOpacityNode = () => {
+        let x = randomIntFromInterval(LAYER_AREA_LEFT - CONTROL_LAYER_MARGIN - CONTROL_LAYER_WIDTH, LAYER_AREA_LEFT - CONTROL_LAYER_MARGIN)
+        let y = randomIntFromInterval(LAYER_AREA_TOP + PADDING, LAYER_AREA_BOTTOM - PADDING)
+        addAdjustmentNode(canvas,{x: x,y:y}, "Opacity")
+    }
+
+    const createBlendNode = () => {
+        let x = randomIntFromInterval(LAYER_AREA_LEFT - CONTROL_LAYER_MARGIN - CONTROL_LAYER_WIDTH, LAYER_AREA_LEFT - CONTROL_LAYER_MARGIN)
+        let y = randomIntFromInterval(LAYER_AREA_TOP + PADDING, LAYER_AREA_BOTTOM - PADDING)
+        addAdjustmentNode(canvas,{x: x,y:y}, "Blend")
+    }
+
+    function randomIntFromInterval(min, max) { // min and max included 
+        return Math.floor(Math.random() * (max - min + 1) + min)
+      }
+      
+    const fetchLayers = () => {
+        layers = ["Layer 1", "Layer 2", "Layer 3", "Layer 4"];
+        // TODO: Make a call to websocker server to get layers info
+        let x = LAYER_AREA_LEFT + (LAYER_AREA_RIGHT - LAYER_AREA_LEFT)/2 - PADDING;
+        let yStep = (LAYER_AREA_BOTTOM - LAYER_AREA_TOP - PADDING)/layers.length;
+        let cnt = 0;
+        layers.forEach(element => {
+            //let x = randomIntFromInterval(LAYER_AREA_LEFT + PADDING, LAYER_AREA_RIGHT - PADDING)
+            let y = LAYER_AREA_TOP + PADDING + cnt*Math.min(50, yStep);
+            cnt++;
+            addLayerNode(canvas, {x:x, y:y}, element);
+        });
+    }
+
+    const arrangeLayers = () => {
+        var layers = canvas.getObjects().filter(obj =>  obj.nodeType === NodeType.NormalLayer);
+        if(layers && layers.length){
+            let yStep = (LAYER_AREA_BOTTOM - LAYER_AREA_TOP - PADDING)/layers.length;
+            let cnt = 0;
+            layers.forEach(element => {
+                let y = LAYER_AREA_TOP + PADDING + cnt*Math.min(50, yStep);
+                cnt++;
+                element.set({top: y, left: LAYER_AREA_LEFT + (LAYER_AREA_RIGHT - LAYER_AREA_LEFT)/2 - PADDING})
+                element.setCoords()
+                updateConnection(element);
+            });
+            canvas.renderAll();
+        }
     }
 
     const handleMenuChange = (e) => {
-        if(e === "syncLayer"){
-
-        }else if(e === "syncLayer"){
-
+        if(e === "fetchLayer"){
+            fetchLayers();
         }else if(e === "createLink"){
             connect();
         }else if(e === "deleteLink"){
@@ -203,24 +303,45 @@ export const Overlay = (props) => {
         }else if(e === "blurNode"){
             createBlurNode();
         }else if(e === "opacityNode"){
-
+            createOpacityNode();
         }else if(e === "blendNode"){
-
+            createBlendNode();
+        }else if(e === "arrangeLayers"){
+            arrangeLayers();
         }
     }
 
     return ( 
-    <div style={{position:'absolute', top:20, left:20}}>
+    <div style={{position:'absolute', top:70, left:40}}>
     <Provider theme={defaultTheme}>
     <ListBox width="size-2400" aria-label="Alignment" onAction={(key) => handleMenuChange(key)}>
         <Section>
-        <Item key={"syncLayer"}>Sync Layers</Item>
-        <Item key={"createLink"}>Create Link</Item>
-        <Item key={"deleteLink"}>Delete Link</Item>
+        <Item key={"fetchLayer"}>
+            <Text>Fetch Layers </Text>
+            <Text slot="description">Cmd+F</Text>
+        </Item>
+        <Item key={"createLink"}>
+            <Text>Create Link </Text>
+            <Text slot="description">Cmd+L</Text>
+        </Item>
+        <Item key={"deleteLink"}>
+            <Text>Delete Link </Text>
+            <Text slot="description">Cmd+D</Text>
+        </Item>
+        <Item key={"arrangeLayers"}>
+            <Text>Arrange Layers </Text>
+            <Text slot="description">Cmd+A</Text>
+        </Item>
         </Section>
         <Section>
-        <Item key={"blurNode"}>Blur Node</Item>
-        <Item key={"opacityNode"}>Opacity Node</Item>
+        <Item key={"blurNode"}>
+            <Text>Blur Node </Text>
+            <Text slot="description">Cmd+B</Text>
+        </Item>
+        <Item key={"opacityNode"}>
+            <Text>Opacity Node </Text>
+            <Text slot="description">Cmd+O</Text>
+        </Item>
         <Item key={"blendNode"}>Blend Node</Item>
         </Section>
     </ListBox>
