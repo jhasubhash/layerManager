@@ -8,6 +8,7 @@ import {useWindowDimensions} from "./Utils"
 import {ListBox, Item, Section,Text} from '@adobe/react-spectrum'
 import { defaultTheme, Provider} from '@adobe/react-spectrum';
 import { useHotkeys } from 'react-hotkeys-hook'
+import { openPort, getPhotoshopLayers, applyBlur, applyOpacity, selectLayer } from "./Connection";
 
 
 let canvasImage = "https://www.transparenttextures.com/patterns/graphy.png";
@@ -66,7 +67,7 @@ export const Overlay = (props) => {
 
 
     useEffect(()=>{
-        //TODO: make a connection to websocket server
+        openPort();
         if(!canvas){
             canvas = new fabric.Canvas('canvas', 
             {
@@ -131,6 +132,11 @@ export const Overlay = (props) => {
                 layerObjs.forEach(obj2 => {
                     // two objects are selected. Connect them
                     let line = connectLayerNode(canvas, obj1, obj2);
+                    if(obj1.name == "Blur"){
+                        applyBlur(obj2.name);
+                    }else if(obj1.name == "Opacity"){
+                        applyOpacity(obj2.name)
+                    }
                     // TODO: Make a call to websocker server to apply the edits to given layer
                 });
             });
@@ -174,9 +180,15 @@ export const Overlay = (props) => {
         }
     }
 
+    const checkandselectLayer = (obj) => {
+        if(obj.nodeType == NodeType.NormalLayer)
+        selectLayer(obj.name)
+    }
+
     const selectionCreated= (e) => {
         console.log("selectionCreated")
         if(!e.selected || !e.selected.length) return;
+        checkandselectLayer(e.selected);
         selectedObj = e.selected[0];
         if(selectedObj && selectedObj.nodeType == NodeType.Link)
             selectedObj.set({ stroke: 'blue' });
@@ -191,6 +203,7 @@ export const Overlay = (props) => {
     const selectionUpdated = (e) => {
         console.log("selectionUpdated")
         if(!e.selected || !e.selected.length) return;
+        checkandselectLayer(e.selected[0]);
         if(selectedObj && selectedObj.nodeType == NodeType.Link){
             selectedObj.set({ stroke: 'black' });
         }
@@ -263,17 +276,18 @@ export const Overlay = (props) => {
         return Math.floor(Math.random() * (max - min + 1) + min)
       }
       
-    const fetchLayers = () => {
-        layers = ["Layer 1", "Layer 2", "Layer 3", "Layer 4"];
+    const fetchLayers = async () => {
+        let psLayers = await getPhotoshopLayers();
+        //layers = ["Layer 1", "Layer 2", "Layer 3", "Layer 4"];
         // TODO: Make a call to websocker server to get layers info
         let x = LAYER_AREA_LEFT + (LAYER_AREA_RIGHT - LAYER_AREA_LEFT)/2 - PADDING;
-        let yStep = (LAYER_AREA_BOTTOM - LAYER_AREA_TOP - PADDING)/layers.length;
+        let yStep = (LAYER_AREA_BOTTOM - LAYER_AREA_TOP - PADDING)/psLayers.length;
         let cnt = 0;
-        layers.forEach(element => {
+        psLayers.forEach(element => {
             //let x = randomIntFromInterval(LAYER_AREA_LEFT + PADDING, LAYER_AREA_RIGHT - PADDING)
             let y = LAYER_AREA_TOP + PADDING + cnt*Math.min(50, yStep);
             cnt++;
-            addLayerNode(canvas, {x:x, y:y}, element);
+            addLayerNode(canvas, {x:x, y:y}, element.name);
         });
     }
 

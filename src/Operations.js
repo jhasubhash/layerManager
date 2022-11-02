@@ -1,5 +1,6 @@
 import { fabric } from "fabric";
 import uuidv4 from 'uuidv4';
+import { selectLayer} from "./Connection";
 
 export const NodeType = {
   NormalLayer : 0,
@@ -46,7 +47,7 @@ export const addLayerNode = (canvas, pos, name) => {
     blur: 5,
   });
   var rect = new fabric.Rect({
-    width: 100,
+    width: 180,
     height: 30,
     rx: 10,
     ry: 10,
@@ -71,6 +72,7 @@ export const addLayerNode = (canvas, pos, name) => {
   });
 
   g.nodeType = NodeType.NormalLayer;
+  g.name = name;
   g.id = uuidv4();
   g.hasControls = true;
   g.set({
@@ -78,6 +80,7 @@ export const addLayerNode = (canvas, pos, name) => {
       cornerStyle: 'circle',
       transparentCorners: false
     });
+
   canvas.add(g);
 }
 
@@ -113,6 +116,7 @@ export const addAdjustmentNode = (canvas, pos, name) => {
 
   g.nodeType = NodeType.AdjustmentLayer;
   g.id = uuidv4();
+  g.name = name;
   g.hasControls = true;
   g.set({
       cornerSize: 6,
