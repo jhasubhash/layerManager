@@ -90,14 +90,37 @@ export const selectLayer = async (layerName) => {
 
 export const applyBlur = async (layerName) => {
     // select layer
-    await selectLayer();
+    await selectLayer(layerName);
     // apply blur
+    let command = {
+        commandType: "mutate",
+        commandName: "Apply Blur",
+        command: {
+            _obj: "gaussianBlur",
+            radius: {
+                _unit: "pixelsUnit",
+                _value: 3
+            },
+            _options: {
+                dialogOptions: "dontDisplay"
+            }
+          
+     }}
+
+     resultPromise =  new Promise(function(resolve, reject){
+         promiseResolve = resolve;
+         promiseReject = reject;
+     });
+     socket.send(JSON.stringify(command))
+     let result = await resultPromise;
+     console.log(result)
+     return result[0];
     
 }
 
 export const applyOpacity = async (layerName) => {
     // select layer
-    await selectLayer();
+    await selectLayer(layerName);
 
     // apply opacity
     let command = {
