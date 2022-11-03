@@ -42,11 +42,14 @@ const prepareSocket = () => {
 
 export const getPhotoshopLayers = async () => {
 
-    let layerProperties = { _obj: "multiGet",
+    let layerProperties = {
+    commandType: "info",
+    commandName: "Fetch Layer",
+    command: { _obj: "multiGet",
         _target: {_ref: [{_ref: "document", _enum: "ordinal"}]},
         extendedReference: [["name"], {_obj: "layer", index:1, count:-1}],
         options: {failOnMissingProperty:false, failOnMissingElement: false}
-    };
+    }};
     resultPromise =  new Promise(function(resolve, reject){
         promiseResolve = resolve;
         promiseReject = reject;
@@ -61,6 +64,9 @@ export const getPhotoshopLayers = async () => {
 
 export const selectLayer = async (layerName) => {
     let command = {
+        commandType: "mutate",
+        commandName: "Select Layer",
+        command: {
         _obj: "select",
         _target: [
            {
@@ -72,7 +78,7 @@ export const selectLayer = async (layerName) => {
         _options: {
            dialogOptions: "dontDisplay"
         }
-     }
+     }}
      resultPromise =  new Promise(function(resolve, reject){
          promiseResolve = resolve;
          promiseReject = reject;
@@ -95,6 +101,9 @@ export const applyOpacity = async (layerName) => {
 
     // apply opacity
     let command = {
+        commandType: "mutate",
+        commandName: "Apply Opacity",
+        command: {
         _obj: "set",
         _target: [
            {
@@ -113,7 +122,8 @@ export const applyOpacity = async (layerName) => {
         _options: {
            dialogOptions: "dontDisplay"
         }
-     }
+     }}
+
      resultPromise =  new Promise(function(resolve, reject){
          promiseResolve = resolve;
          promiseReject = reject;
