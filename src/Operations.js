@@ -156,8 +156,7 @@ export const connectLayerNode = (canvas, obj1, obj2) => {
 }
 
 
-export const disconnectLayerNode = (canvas) => {
-  let line = canvas.getActiveObject();
+export const disconnectLayerNode = (line) => {
   if(!line || !line.objects) return;
   line.objects[0].startLines = line.objects[0].startLines.filter(x => {
       return x.Id != line.id;
@@ -165,5 +164,4 @@ export const disconnectLayerNode = (canvas) => {
   line.objects[1].endLines = line.objects[1].endLines.filter(x => {
       return x.Id != line.id;
   })
-  canvas.remove(line);
 }

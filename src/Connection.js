@@ -84,14 +84,15 @@ export const selectLayer = async (layerName) => {
          promiseReject = reject;
      });
      socket.send(JSON.stringify(command))
-     //let result = await resultPromise;
-     //return result[0];
+     let result = await resultPromise;
+     return result[0];
 }
 
 export const applyBlur = async (layerName) => {
     // select layer
-    await selectLayer(layerName);
+    selectLayer(layerName);
     // apply blur
+    console.log(layerName + " selected")
     let command = {
         commandType: "mutate",
         commandName: "Apply Blur",
@@ -113,6 +114,7 @@ export const applyBlur = async (layerName) => {
      });
      socket.send(JSON.stringify(command))
      let result = await resultPromise;
+     console.log(layerName + " applied")
      console.log(result)
      return result[0];
     
@@ -120,7 +122,7 @@ export const applyBlur = async (layerName) => {
 
 export const applyOpacity = async (layerName) => {
     // select layer
-    await selectLayer(layerName);
+    selectLayer(layerName);
 
     // apply opacity
     let command = {
@@ -157,6 +159,77 @@ export const applyOpacity = async (layerName) => {
      return result[0];
 }
 
+
+export const removeBlur = async (layerName) => {
+    // select layer
+    selectLayer(layerName);
+    // apply blur
+    console.log(layerName + " selected")
+    let command = {
+        commandType: "mutate",
+        commandName: "Apply Blur",
+        command: {
+            _obj: "gaussianBlur",
+            radius: {
+                _unit: "pixelsUnit",
+                _value: 0
+            },
+            _options: {
+                dialogOptions: "dontDisplay"
+            }
+          
+     }}
+
+     resultPromise =  new Promise(function(resolve, reject){
+         promiseResolve = resolve;
+         promiseReject = reject;
+     });
+     socket.send(JSON.stringify(command))
+     let result = await resultPromise;
+     console.log(layerName + " applied")
+     console.log(result)
+     return result[0];
+    
+}
+
+export const removeOpacity = async (layerName) => {
+    // select layer
+    selectLayer(layerName);
+
+    // apply opacity
+    let command = {
+        commandType: "mutate",
+        commandName: "Apply Opacity",
+        command: {
+        _obj: "set",
+        _target: [
+           {
+              _ref: "layer",
+              _enum: "ordinal",
+              _value: "targetEnum"
+           }
+        ],
+        to: {
+           _obj: "layer",
+           opacity: {
+              _unit: "percentUnit",
+              _value: 100
+           }
+        },
+        _options: {
+           dialogOptions: "dontDisplay"
+        }
+     }}
+
+     resultPromise =  new Promise(function(resolve, reject){
+         promiseResolve = resolve;
+         promiseReject = reject;
+     });
+     socket.send(JSON.stringify(command))
+     let result = await resultPromise;
+     console.log(result)
+     return result[0];
+}
 export const openPort = () => {
     if(portOpen) return;
     portOpen = true;

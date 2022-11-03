@@ -8,7 +8,7 @@ import {useWindowDimensions} from "./Utils"
 import {ListBox, Item, Section,Text} from '@adobe/react-spectrum'
 import { defaultTheme, Provider} from '@adobe/react-spectrum';
 import { useHotkeys } from 'react-hotkeys-hook'
-import { openPort, getPhotoshopLayers, applyBlur, applyOpacity, selectLayer } from "./Connection";
+import { openPort, getPhotoshopLayers, applyBlur, applyOpacity, selectLayer, removeBlur, removeOpacity } from "./Connection";
 
 
 let canvasImage = "https://www.transparenttextures.com/patterns/graphy.png";
@@ -144,7 +144,20 @@ export const Overlay = (props) => {
     }
 
     const disconnect = () => {
-        disconnectLayerNode(canvas);
+        let line = canvas.getActiveObject();
+        if(!line || !line.objects) return;
+        let obj1 = line.objects.filter((obj)=> obj.nodeType == NodeType.AdjustmentLayer)
+        let obj2 = line.objects.filter((obj)=> obj.nodeType == NodeType.NormalLayer)
+        console.log(obj1)
+        if(obj1 && obj2){
+            if(obj1[0].name == "Blur"){
+                removeBlur(obj2[0].name);
+            }else if(obj1[0].name == "Opacity"){
+                removeOpacity(obj2[0].name)
+            }
+        }
+        disconnectLayerNode(line);
+        canvas.remove(line);
     }
 
     const updateConnection = (p) => {
