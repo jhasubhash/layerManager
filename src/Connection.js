@@ -7,8 +7,6 @@ let resultPromise, promiseResolve,promiseReject;
 const prepareSocket = () => {
     socket.onopen = function(e) {
         console.log("[open] Connection established");
-        console.log("Sending to server");
-        socket.send("My name is John");
     };
     
     socket.onmessage = function(event) {
@@ -160,6 +158,8 @@ export const applyOpacity = async (layerName) => {
 }
 
 
+// This will not work as gussiann bluf is destructive. 
+// So setting to 0 will just apply no blur but it can't revert the current blur applied.
 export const removeBlur = async (layerName) => {
     // select layer
     selectLayer(layerName);
